@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { ethers } from 'ethers'
 import LendingPoolABI from './abis/LendingPool.sol/LendingPool.json'
 import MockERC20ABI from './abis/MockERC20.sol/MockERC20.json'
+import InterestRateStrategyABI from './abis/InterestRateStrategy.sol/InterestRateStrategy.json'
 import { addresses } from './contracts/addresses'
+
 
 function App() {
   const [walletAddress, setWalletAddress] = useState(null)
@@ -15,6 +17,7 @@ function App() {
   const [healthFactor, setHealthFactor] = useState('0')
   const [repayAmount, setRepayAmount] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [borrowRate, setBorrowRate] = useState('0')
 
   const connectWallet = async () => {
     if (!window.ethereum) {
@@ -87,6 +90,11 @@ function App() {
 
       const factor = await lendingPoolContract.getHealthFactor(_walletAddress)
       setHealthFactor((Number(factor) / 10000).toFixed(2))
+
+      const interestStrategyContract = new ethers.Contract(addresses.interestStrategy, InterestRateStrategyABI.abi, _signer)
+      const totalDeposited = await lendingPoolContract.deposits(addresses.usdc, _walletAddress) // total in pool
+      const borrowRate = await interestStrategyContract.calculateBorrowRate(totalBorrows, totalDeposited)
+      setBorrowRate((Number(borrowRate) / 100).toFixed(2) + '%')
     } catch (error) {
       alert('Failed to fetch balances: ' + error.message)
     }
@@ -227,6 +235,10 @@ function App() {
             <div className="flex flex-col gap-1">
               <span className="text-gray-500 text-xs uppercase tracking-wider">Health Factor</span>
               <span className="text-gray-200 text-xl font-semibold">{healthFactor}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-500 text-xs uppercase tracking-wider">Borrow APY</span>
+              <span className="text-gray-200 text-xl font-semibold">{borrowRate}</span>
             </div>
             <button
               onClick={() => fetchBalances(signer, walletAddress)}
