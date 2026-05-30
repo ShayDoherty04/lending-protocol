@@ -139,51 +139,102 @@ function App() {
 
 
   return (
-    <div>
-      <h1>Lending Protocol</h1>
+  <div className="min-h-screen bg-[#0d0f14] text-gray-200">
+    <nav className="flex justify-between items-center px-8 py-4 border-b border-[#1e2130]">
+      <h1 className="text-[#4cff72] text-xl font-bold">Lending Protocol</h1>
       {walletAddress ? (
-        <div>
-          <p>Connected: {walletAddress}</p>
-          
-          <input
-            type="text"
-            placeholder="Amount to deposit"
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(e.target.value)}
-          />
-          <button onClick={deposit}>Deposit USDC</button>
-
-          <input
-            type="text"
-            placeholder="Amount to borrow"
-            value={borrowAmount}
-            onChange={(e) => setBorrowAmount(e.target.value)}
-          />
-          <button onClick={borrow}>Borrow USDC</button>
-
-          <input
-            type="text"
-            placeholder="Amount to repay"
-            value={repayAmount}
-            onChange={(e) => setRepayAmount(e.target.value)}
-          />
-          <button onClick={repayForm}>Repay USDC</button>
-
-          <input
-            type="text"
-            placeholder="Amount to withdraw"
-            value={withdrawAmount}
-            onChange={(e) => setWithdrawAmount(e.target.value)}
-          />
-          <button onClick={withdrawForm}>Withdraw USDC</button>
-
-          <button onClick={() => fetchBalances(signer, walletAddress)}>Refresh Balances</button>
-          <p>aUSDC Balance: {aTokenBalance}</p>
-          <p>Debt Balance: {debtBalance}</p>
-          <p>Health Factor: {healthFactor}</p>
-        </div>
+        <span className="text-[#4cff72] text-sm font-medium">
+          {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+        </span>
       ) : (
-        <button onClick={connectWallet}>Connect Wallet</button>
+        <button
+          onClick={connectWallet}
+          className="border border-[#4cff72] text-[#4cff72] px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#4cff72] hover:text-[#0d0f14] transition"
+        >
+          Connect Wallet
+        </button>
+      )}
+    </nav>
+
+    {walletAddress && (
+        <div className="max-w-5xl mx-auto mt-10 px-6 grid grid-cols-2 gap-6">
+          <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6">
+            <h2 className="text-[#4cff72] text-lg font-semibold mb-4">Deposit</h2>
+            <input
+              type="text"
+              placeholder="Amount to deposit"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
+            />
+            <button onClick={deposit} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
+              Deposit USDC
+            </button>
+          </div>
+
+          <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6">
+            <h2 className="text-[#4cff72] text-lg font-semibold mb-4">Borrow</h2>
+            <input
+              type="text"
+              placeholder="Amount to borrow"
+              value={borrowAmount}
+              onChange={(e) => setBorrowAmount(e.target.value)}
+              className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
+            />
+            <button onClick={borrow} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
+              Borrow USDC
+            </button>
+          </div>
+
+          <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6">
+            <h2 className="text-[#4cff72] text-lg font-semibold mb-4">Repay</h2>
+            <input
+              type="text"
+              placeholder="Amount to repay"
+              value={repayAmount}
+              onChange={(e) => setRepayAmount(e.target.value)}
+              className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
+            />
+            <button onClick={repayForm} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
+              Repay USDC
+            </button>
+          </div>
+
+          <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6">
+            <h2 className="text-[#4cff72] text-lg font-semibold mb-4">Withdraw</h2>
+            <input
+              type="text"
+              placeholder="Amount to withdraw"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
+            />
+            <button onClick={withdrawForm} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
+              Withdraw USDC
+            </button>
+          </div>
+
+          <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6 col-span-2 flex gap-10 items-center">
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-500 text-xs uppercase tracking-wider">aUSDC Balance</span>
+              <span className="text-gray-200 text-xl font-semibold">{aTokenBalance}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-500 text-xs uppercase tracking-wider">Debt Balance</span>
+              <span className="text-gray-200 text-xl font-semibold">{debtBalance}</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-500 text-xs uppercase tracking-wider">Health Factor</span>
+              <span className="text-gray-200 text-xl font-semibold">{healthFactor}</span>
+            </div>
+            <button
+              onClick={() => fetchBalances(signer, walletAddress)}
+              className="ml-auto border border-[#2a2f45] text-[#4cff72] px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#1e2130] transition"
+            >
+              Refresh Balances
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
