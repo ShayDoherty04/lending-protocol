@@ -82,7 +82,8 @@ function App() {
       setATokenBalance(ethers.formatUnits(aBalance, 6))
 
       const debt = await lendingPoolContract.getUserDebtValue(_walletAddress)
-      setDebtBalance(ethers.formatUnits(debt, 12).toString())
+      const debtInTokens = debt / BigInt(100000000)
+      setDebtBalance(ethers.formatUnits(debtInTokens, 6))
 
       const factor = await lendingPoolContract.getHealthFactor(_walletAddress)
       setHealthFactor((Number(factor) / 10000).toFixed(2))
