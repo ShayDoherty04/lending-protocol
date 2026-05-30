@@ -92,9 +92,10 @@ function App() {
       setHealthFactor((Number(factor) / 10000).toFixed(2))
 
       const interestStrategyContract = new ethers.Contract(addresses.interestStrategy, InterestRateStrategyABI.abi, _signer)
-      const totalDeposited = await lendingPoolContract.deposits(addresses.usdc, _walletAddress) // total in pool
-      const borrowRate = await interestStrategyContract.calculateBorrowRate(totalBorrows, totalDeposited)
-      setBorrowRate((Number(borrowRate) / 100).toFixed(2) + '%')
+      const totalDeposited = await lendingPoolContract.deposits(addresses.usdc, addresses.usdc)
+      const _totalBorrows = await lendingPoolContract.totalBorrows(addresses.usdc)
+      const _borrowRate = await interestStrategyContract.calculateBorrowRate(_totalBorrows, totalDeposited)
+      setBorrowRate((Number(_borrowRate) / 100).toFixed(2) + '%')
     } catch (error) {
       alert('Failed to fetch balances: ' + error.message)
     }
