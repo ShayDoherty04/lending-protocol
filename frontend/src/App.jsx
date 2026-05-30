@@ -92,7 +92,7 @@ function App() {
       setHealthFactor((Number(factor) / 10000).toFixed(2))
 
       const interestStrategyContract = new ethers.Contract(addresses.interestStrategy, InterestRateStrategyABI.abi, _signer)
-      const totalDeposited = await lendingPoolContract.deposits(addresses.usdc, addresses.usdc)
+      const totalDeposited = await lendingPoolContract.deposits(addresses.usdc, _walletAddress)
       const _totalBorrows = await lendingPoolContract.totalBorrows(addresses.usdc)
       const _borrowRate = await interestStrategyContract.calculateBorrowRate(_totalBorrows, totalDeposited)
       setBorrowRate((Number(_borrowRate) / 100).toFixed(2) + '%')
