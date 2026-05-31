@@ -116,7 +116,12 @@ function App() {
       setDebtBalance(ethers.formatUnits(debtInTokens, 6))
 
       const factor = await lendingPoolContract.getHealthFactor(_walletAddress)
-      setHealthFactor((Number(factor) / 10000).toFixed(2))
+      const maxUint = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935")
+      if (factor === maxUint) {
+        setHealthFactor('∞')
+      } else {
+        setHealthFactor((Number(factor) / 10000).toFixed(2))
+      }
 
       const interestStrategyContract = new ethers.Contract(addresses.interestStrategy, InterestRateStrategyABI.abi, _signer)
       const totalDeposited = await lendingPoolContract.deposits(selected.token, _walletAddress)
