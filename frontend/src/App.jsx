@@ -23,6 +23,7 @@ function App() {
   const [stakeAmount, setStakeAmount] = useState('')
   const [stakedBalance, setStakedBalance] = useState('0')
   const [pendingRewards, setPendingRewards] = useState('0')
+  const [loading, setLoading] = useState(false)
 
   const tokens = {
     usdc: { label: 'USDC', token: addresses.usdc, aToken: addresses.aUsdc, dToken: addresses.dUsdc, decimals: 6 },
@@ -56,6 +57,7 @@ function App() {
       return
     }
     try {
+      setLoading(true)
       const selected = tokens[selectedToken]
       const usdcContract = new ethers.Contract(selected.token, MockERC20ABI.abi, signer)
       const lendingPoolContract = new ethers.Contract(addresses.lendingPool, LendingPoolABI.abi, signer)
@@ -68,11 +70,18 @@ function App() {
       await fetchBalances(signer, walletAddress)
     } catch (error) {
       alert('Deposit failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   const borrow = async () => {
+    if (!signer) {
+      alert('Please connect your wallet first')
+      return
+    }
     try {
+      setLoading(true)
       const selected = tokens[selectedToken]
       const lendingPoolContract = new ethers.Contract(addresses.lendingPool, LendingPoolABI.abi, signer)
 
@@ -86,12 +95,15 @@ function App() {
       await fetchBalances(signer, walletAddress)
     } catch (error) {
       alert('Borrow failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
-}
+  }
 
   const fetchBalances = async (_signer, _walletAddress) => {
 
     try {
+      setLoading(true)
       const selected = tokens[selectedToken]
       const aTokenContract = new ethers.Contract(selected.aToken, MockERC20ABI.abi, _signer)
       const lendingPoolContract = new ethers.Contract(addresses.lendingPool, LendingPoolABI.abi, _signer)
@@ -113,6 +125,8 @@ function App() {
       setBorrowRate((Number(_borrowRate) / 100).toFixed(2) + '%')
     } catch (error) {
       alert('Failed to fetch balances: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -122,6 +136,7 @@ function App() {
       return
     }
     try {
+      setLoading(true)
       const selected = tokens[selectedToken]
       const usdcContract = new ethers.Contract(selected.token, MockERC20ABI.abi, signer)
       const lendingPoolContract = new ethers.Contract(addresses.lendingPool, LendingPoolABI.abi, signer)
@@ -137,8 +152,11 @@ function App() {
       await repayTx.wait()
       await fetchBalances(signer, walletAddress)
       alert('repay successful!')
+      setLoading(false)
     } catch (error) {
       alert('Repay failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -148,6 +166,7 @@ function App() {
       return
     }
     try {
+      setLoading(true)
       const selected = tokens[selectedToken]
       const lendingPoolContract = new ethers.Contract(addresses.lendingPool, LendingPoolABI.abi, signer)
       const amount = ethers.parseUnits(withdrawAmount, selected.decimals)
@@ -160,6 +179,8 @@ function App() {
       await fetchBalances(signer, walletAddress)
     } catch (error) {
       alert('Withdraw failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -169,6 +190,7 @@ function App() {
       return
     }
     try {
+      setLoading(true)
       const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
       const aTokenContract = new ethers.Contract(tokens[selectedToken].aToken, MockERC20ABI.abi, signer)
       
@@ -186,6 +208,8 @@ function App() {
       await fetchBalances(signer, walletAddress)
     } catch (error) {
       alert('Stake failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -195,6 +219,7 @@ function App() {
       return
     }
     try {
+      setLoading(true)
       const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
       
       const amount = ethers.parseUnits(stakeAmount, tokens[selectedToken].decimals)
@@ -207,6 +232,8 @@ function App() {
       await fetchBalances(signer, walletAddress)
     } catch (error) {
       alert('Unstake failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -216,6 +243,7 @@ function App() {
       return
     }
     try {
+      setLoading(true)
       const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
 
       // Claim rewards
@@ -226,11 +254,14 @@ function App() {
       await fetchBalances(signer, walletAddress)
     } catch (error) {
       alert('Claiming rewards failed: ' + error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   const fetchYieldFarmBalance = async () => {
-    try {      
+    try {
+      setLoading(true)      
       const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
 
       const staked = await yieldFarmContract.stakedBalance(walletAddress)
@@ -240,7 +271,8 @@ function App() {
       setPendingRewards(ethers.formatUnits(rewards, 18))
     } catch (error) {
       alert('Failed to fetch yield farm balances: ' + error.message)  
-
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -255,6 +287,7 @@ function App() {
     setStakedBalance('0')
     setPendingRewards('0')
   }
+
 
 
 
@@ -308,8 +341,8 @@ function App() {
                 onChange={(e) => setDepositAmount(e.target.value)}
                 className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
               />
-              <button onClick={deposit} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
-                Deposit {tokens[selectedToken].label}
+              <button onClick={deposit} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition" disabled={loading}>
+                {loading ? 'Processing...' : `Deposit ${tokens[selectedToken].label}`}
               </button>
             </div>
 
@@ -322,8 +355,8 @@ function App() {
                 onChange={(e) => setBorrowAmount(e.target.value)}
                 className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
               />
-              <button onClick={borrow} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
-                Borrow {tokens[selectedToken].label}
+              <button onClick={borrow} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition" disabled={loading}>
+                {loading ? 'Processing...' : `Borrow ${tokens[selectedToken].label}`}
               </button>
             </div>
 
@@ -336,8 +369,8 @@ function App() {
                 onChange={(e) => setRepayAmount(e.target.value)}
                 className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
               />
-              <button onClick={repayForm} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
-                Repay {tokens[selectedToken].label}
+              <button onClick={repayForm} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition" disabled={loading}>
+                {loading ? 'Processing...' : `Repay ${tokens[selectedToken].label}`}
               </button>
             </div>
 
@@ -350,8 +383,8 @@ function App() {
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 className="w-full bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm mb-3 outline-none focus:border-[#4cff72]"
               />
-              <button onClick={withdrawForm} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition">
-                Withdraw {tokens[selectedToken].label}
+              <button onClick={withdrawForm} className="w-full bg-[#4cff72] text-[#0d0f14] font-bold py-3 rounded-lg hover:bg-[#3de063] transition" disabled={loading}>
+                {loading ? 'Processing...' : `Withdraw ${tokens[selectedToken].label}`}
               </button>
             </div>
 
@@ -375,8 +408,9 @@ function App() {
               <button
                 onClick={() => fetchBalances(signer, walletAddress)}
                 className="ml-auto border border-[#2a2f45] text-[#4cff72] px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#1e2130] transition"
+                disabled={loading}
               >
-                Refresh Balances
+                {loading ? 'Processing...' : 'Refresh Balances'}
               </button>
             </div>
                         <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6 col-span-2">
@@ -393,8 +427,9 @@ function App() {
                 <button
                   onClick={fetchYieldFarmBalance}
                   className="border border-[#2a2f45] text-[#4cff72] px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#1e2130] transition self-center"
+                  disabled={loading}
                 >
-                  Refresh
+                  {loading ? 'Processing...' : 'Fetch Balances'}
                 </button>
               </div>
               <div className="flex gap-4">
@@ -405,14 +440,14 @@ function App() {
                   onChange={(e) => setStakeAmount(e.target.value)}
                   className="flex-1 bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm outline-none focus:border-[#4cff72]"
                 />
-                <button onClick={stakeForm} className="bg-[#4cff72] text-[#0d0f14] font-bold px-6 py-3 rounded-lg hover:bg-[#3de063] transition">
+                <button onClick={stakeForm} className="bg-[#4cff72] text-[#0d0f14] font-bold px-6 py-3 rounded-lg hover:bg-[#3de063] transition" disabled={loading}>
                   Stake
                 </button>
-                <button onClick={unstakeForm} className="border border-[#4cff72] text-[#4cff72] font-bold px-6 py-3 rounded-lg hover:bg-[#4cff72] hover:text-[#0d0f14] transition">
+                <button onClick={unstakeForm} className="border border-[#4cff72] text-[#4cff72] font-bold px-6 py-3 rounded-lg hover:bg-[#4cff72] hover:text-[#0d0f14] transition" disabled={loading}>
                   Unstake
                 </button>
-                <button onClick={claimRewards} className="border border-[#2a2f45] text-[#4cff72] font-bold px-6 py-3 rounded-lg hover:bg-[#1e2130] transition">
-                  Claim Rewards
+                <button onClick={claimRewards} className="border border-[#2a2f45] text-[#4cff72] font-bold px-6 py-3 rounded-lg hover:bg-[#1e2130] transition" disabled={loading}>
+                  {loading ? 'Processing...' : 'Claim Rewards'}
                 </button>
               </div>
             </div>
