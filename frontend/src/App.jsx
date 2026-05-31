@@ -4,6 +4,7 @@ import LendingPoolABI from './abis/LendingPool.sol/LendingPool.json'
 import MockERC20ABI from './abis/MockERC20.sol/MockERC20.json'
 import InterestRateStrategyABI from './abis/InterestRateStrategy.sol/InterestRateStrategy.json'
 import { addresses } from './contracts/addresses'
+import YieldFarmABI from './abis/YieldFarm.sol/YieldFarm.json'
 
 
 function App() {
@@ -19,6 +20,9 @@ function App() {
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [borrowRate, setBorrowRate] = useState('0')
   const [selectedToken, setSelectedToken] = useState('usdc')
+  const [stakeAmount, setStakeAmount] = useState('')
+  const [stakedBalance, setStakedBalance] = useState('0')
+  const [pendingRewards, setPendingRewards] = useState('0')
 
   const tokens = {
     usdc: { label: 'USDC', token: addresses.usdc, aToken: addresses.aUsdc, dToken: addresses.dUsdc, decimals: 6 },
@@ -159,6 +163,87 @@ function App() {
     }
   }
 
+  const stakeForm = async () => {
+    if (!signer) {
+      alert('Please connect your wallet first')
+      return
+    }
+    try {
+      const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
+      const aTokenContract = new ethers.Contract(tokens[selectedToken].aToken, MockERC20ABI.abi, signer)
+      
+      const amount = ethers.parseUnits(stakeAmount, tokens[selectedToken].decimals)
+
+      // Approve YieldFarm to spend aTokens
+      const approveTx = await aTokenContract.approve(addresses.yieldFarm, amount)
+      await approveTx.wait()
+
+      // Stake in YieldFarm
+      const stakeTx = await yieldFarmContract.stake(amount)
+      await stakeTx.wait()
+
+      alert('Stake successful!')
+      await fetchBalances(signer, walletAddress)
+    } catch (error) {
+      alert('Stake failed: ' + error.message)
+    }
+  }
+
+  const unstakeForm = async () => {
+    if (!signer) {
+      alert('Please connect your wallet first')
+      return
+    }
+    try {
+      const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
+      
+      const amount = ethers.parseUnits(stakeAmount, tokens[selectedToken].decimals)
+
+      // Unstake from YieldFarm
+      const unstakeTx = await yieldFarmContract.unstake(amount)
+      await unstakeTx.wait()
+
+      alert('Unstake successful!')
+      await fetchBalances(signer, walletAddress)
+    } catch (error) {
+      alert('Unstake failed: ' + error.message)
+    }
+  }
+
+  const claimRewards = async () => {
+    if (!signer) {
+      alert('Please connect your wallet first')
+      return
+    }
+    try {
+      const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
+
+      // Claim rewards
+      const claimTx = await yieldFarmContract.claimReward()
+      await claimTx.wait()
+
+      alert('Rewards claimed successfully!')
+      await fetchBalances(signer, walletAddress)
+    } catch (error) {
+      alert('Claiming rewards failed: ' + error.message)
+    }
+  }
+
+  const fetchYieldFarmBalance = async () => {
+    try {      
+      const yieldFarmContract = new ethers.Contract(addresses.yieldFarm, YieldFarmABI.abi, signer)
+
+      const staked = await yieldFarmContract.stakedBalance(walletAddress)
+      setStakedBalance(ethers.formatUnits(staked, tokens[selectedToken].decimals))
+
+      const rewards = await yieldFarmContract.calculateReward(walletAddress)
+      setPendingRewards(ethers.formatUnits(rewards, 18))
+    } catch (error) {
+      alert('Failed to fetch yield farm balances: ' + error.message)  
+
+    }
+  }
+
 
 
   return (
@@ -273,6 +358,43 @@ function App() {
               >
                 Refresh Balances
               </button>
+            </div>
+                        <div className="bg-[#151821] border border-[#1e2130] rounded-2xl p-6 col-span-2">
+              <h2 className="text-[#4cff72] text-lg font-semibold mb-4">Yield Farm</h2>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-gray-500 text-xs uppercase tracking-wider">Staked Balance</span>
+                  <span className="text-gray-200 text-xl font-semibold">{stakedBalance}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-gray-500 text-xs uppercase tracking-wider">Pending Rewards (YRT)</span>
+                  <span className="text-gray-200 text-xl font-semibold">{pendingRewards}</span>
+                </div>
+                <button
+                  onClick={fetchYieldFarmBalance}
+                  className="border border-[#2a2f45] text-[#4cff72] px-5 py-2 rounded-lg font-semibold text-sm hover:bg-[#1e2130] transition self-center"
+                >
+                  Refresh
+                </button>
+              </div>
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  placeholder="Amount to stake"
+                  value={stakeAmount}
+                  onChange={(e) => setStakeAmount(e.target.value)}
+                  className="flex-1 bg-[#1e2130] border border-[#2a2f45] text-gray-200 placeholder-gray-600 px-4 py-3 rounded-lg text-sm outline-none focus:border-[#4cff72]"
+                />
+                <button onClick={stakeForm} className="bg-[#4cff72] text-[#0d0f14] font-bold px-6 py-3 rounded-lg hover:bg-[#3de063] transition">
+                  Stake
+                </button>
+                <button onClick={unstakeForm} className="border border-[#4cff72] text-[#4cff72] font-bold px-6 py-3 rounded-lg hover:bg-[#4cff72] hover:text-[#0d0f14] transition">
+                  Unstake
+                </button>
+                <button onClick={claimRewards} className="border border-[#2a2f45] text-[#4cff72] font-bold px-6 py-3 rounded-lg hover:bg-[#1e2130] transition">
+                  Claim Rewards
+                </button>
+              </div>
             </div>
           </div>
         </div>
