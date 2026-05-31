@@ -117,7 +117,7 @@ function App() {
 
       const factor = await lendingPoolContract.getHealthFactor(_walletAddress)
       const maxUint = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935")
-      if (factor === maxUint) {
+      if (factor >= maxUint / 2n) {
         setHealthFactor('∞')
       } else {
         setHealthFactor((Number(factor) / 10000).toFixed(2))
