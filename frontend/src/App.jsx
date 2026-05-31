@@ -244,6 +244,18 @@ function App() {
     }
   }
 
+  const disconnectWallet = () => {
+    setWalletAddress(null)
+    setSigner(null)
+    setProvider(null)
+    setATokenBalance('0')
+    setDebtBalance('0')
+    setHealthFactor('0')
+    setBorrowRate('0')
+    setStakedBalance('0')
+    setPendingRewards('0')
+  }
+
 
 
   return (
@@ -251,9 +263,17 @@ function App() {
       <nav className="flex justify-between items-center px-8 py-4 border-b border-[#1e2130]">
         <h1 className="text-[#4cff72] text-xl font-bold">Lending Protocol</h1>
         {walletAddress ? (
-          <span className="text-[#4cff72] text-sm font-medium">
-            {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-[#4cff72] text-sm font-medium">
+              {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+            </span>
+            <button
+              onClick={disconnectWallet}
+              className="border border-red-500 text-red-500 px-5 py-2 rounded-lg font-semibold text-sm hover:bg-red-500 hover:text-white transition"
+            >
+              Disconnect
+            </button>
+          </div>
         ) : (
           <button
             onClick={connectWallet}
